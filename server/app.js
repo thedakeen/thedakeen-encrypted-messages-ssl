@@ -3,11 +3,15 @@ const app = express();
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io")
+
 app.use(cors());
+
 const crypto = require('crypto');
 const fs = require('fs');
+
 const privateKey = fs.readFileSync('../ssl/certificate/private.key', 'utf-8');
 const publicKey = fs.readFileSync('../ssl/certificate/public_key.pem', 'utf-8');
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
@@ -53,7 +57,7 @@ io.on("connection", (socket) => {
             Buffer.from(`Echo: ${decryptedMessage}`)
         );
 
-        console.log("Encrypted message: ", encryptedResponse.toString('base64'))
+        // console.log("Encrypted message: ", encryptedResponse.toString('base64'))
 
         socket.to(data.room).emit("receive_message", {
             message: decryptedMessage,
@@ -65,20 +69,17 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
 
-        let disconnectedUser = null; // Сохраняем имя вышедшего пользователя
+        let disconnectedUser = null;
 
         for (let room in roomUsers) {
-            // Найти пользователя с соответствующим socketId
             const user = roomUsers[room].find(user => user.socketId === socket.id);
 
             if (user) {
-                disconnectedUser = user.username; // Сохраняем имя пользователя
+                disconnectedUser = user.username;
             }
 
-            // Удалить пользователя из списка
             roomUsers[room] = roomUsers[room].filter(user => user.socketId !== socket.id);
 
-            // Обновить список пользователей в комнате
             io.to(room).emit("update_user_list", roomUsers[room]);
         }
 
