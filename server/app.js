@@ -64,10 +64,29 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
+
+        let disconnectedUser = null; // Сохраняем имя вышедшего пользователя
+
         for (let room in roomUsers) {
+            // Найти пользователя с соответствующим socketId
+            const user = roomUsers[room].find(user => user.socketId === socket.id);
+
+            if (user) {
+                disconnectedUser = user.username; // Сохраняем имя пользователя
+            }
+
+            // Удалить пользователя из списка
             roomUsers[room] = roomUsers[room].filter(user => user.socketId !== socket.id);
+
+            // Обновить список пользователей в комнате
             io.to(room).emit("update_user_list", roomUsers[room]);
         }
+
+
+            io.emit("receive_message", {
+                message: `${disconnectedUser} disconnected`,
+            });
+
         console.log("User Disconnected", socket.id);
     });
 
