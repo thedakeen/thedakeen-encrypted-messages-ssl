@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ScrollToBottom from "react-scroll-to-bottom";
-
-import crypto from "crypto-browserify";
-
-// async function fetchCertificate(){
-//     const response = await fetch("https://localhost:8000/certificate");
-//     return await response.text();
-// }
+import crypto from "crypto";
 
 function encryptMessage(message, publicKey){
     const buffer = Buffer.from(message, 'utf-8');
@@ -15,65 +9,33 @@ function encryptMessage(message, publicKey){
 }
 
 
-/////////////////////////////////////
-
-// function Chat({ socket, username, room }) {
-//     const [currentMessage, setCurrentMessage] = useState("");
-//     const [messageList, setMessageList] = useState([]);
-//
-//     const sendMessage = async () => {
-//         if (currentMessage !== "") {
-//             const publicKey = await fetchCertificate();
-//             const encryptedMessage = encryptMessage(currentMessage, publicKey);
-//
-//
-//             const messageData = {
-//                 room: room,
-//                 author: username,
-//                 message: encryptedMessage,
-//                 time:
-//                     new Date(Date.now()).getHours() +
-//                     ":" +
-//                     new Date(Date.now()).getMinutes(),
-//             };
-//
-//             await socket.emit("send_message", messageData);
-//             // setMessageList((list) => [...list, messageData]);
-//             setMessageList((list) => [...list, { ...messageData, message: currentMessage }]);
-//             setCurrentMessage("");
-//         }
-//     };
-
-function Chat({ socket, username, room }) {
+function Chat({ socket, username, room}) {
     const [currentMessage, setCurrentMessage] = useState("");
     const [messageList, setMessageList] = useState([]);
-    const [publicKey, setPublicKey] = useState(null);
+    const [publicKey, setPublicKey] = useState("");
+
 
     const sendMessage = async () => {
-        console.log("sendMessage called");
-        if (currentMessage !== "" && publicKey) {
-            const encryptedMessage = encryptMessage(currentMessage, publicKey);
+        if (currentMessage !== "" && publicKey !== "") {
+            const encryptedMessage = encryptMessage(currentMessage, publicKey)
 
             const messageData = {
                 room: room,
                 author: username,
                 message: encryptedMessage,
                 time: new Date(Date.now()).getHours() + ":" + new Date(Date.now()).getMinutes(),
+                publicKey: publicKey,
             };
 
             await socket.emit("send_message", messageData);
             setMessageList((list) => [...list, { ...messageData, message: currentMessage }]);
             setCurrentMessage("");
         }else{
-            console.log("Public key not available or message is empty.");
+            console.log("Message is empty.");
         }
     };
 
     useEffect(() => {
-        socket.on("certificate", (key) => {
-            console.log("Received public key:", key);  // Добавьте лог для проверки
-            setPublicKey(key);
-        });
 
         const handleReceiveMessage = (data) => {
             setMessageList((list) => [...list, data]);
@@ -83,7 +45,19 @@ function Chat({ socket, username, room }) {
 
         return () => {
             socket.off("receive_message", handleReceiveMessage);
-            socket.off("certificate");
+        };
+    }, [socket]);
+
+    useEffect(() => {
+        socket.emit("request_public_key");
+
+        socket.on("receive_public_key", (key) => {
+            console.log("Received public key:", key);
+            setPublicKey(key);
+        });
+
+        return () => {
+            socket.off("receive_public_key");
         };
     }, [socket]);
 
@@ -133,3 +107,4 @@ function Chat({ socket, username, room }) {
 }
 
 export default Chat;
+
