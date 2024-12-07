@@ -27,7 +27,7 @@ body {
   width: 210px;
   height: 40px;
   margin: 7px;
-  border: 2px solid #43a047;
+  border: 2px solid #9a3434;
   border-radius: 5px;
   padding: 5px;
   font-size: 16px;
@@ -41,17 +41,17 @@ body {
   border-radius: 5px;
   padding: 5px;
   font-size: 16px;
-  background: #43a047;
+  background: #9A3434FF;
   color: #fff;
   cursor: pointer;
 }
 
 .joinChatContainer button:hover {
-  background: #2e7d32;
+  background: #971c1c;
 }
 
 .chat-window {
-  width: 300px;
+  width: 600px;
   height: 420px;
 }
 
@@ -60,11 +60,12 @@ body {
 }
 .chat-window .chat-header {
   height: 45px;
-  border-radius: 6px;
-  background: #263238;
+  border-radius: 6px 6px 0 0; /* Верхние углы закруглены, нижние - квадратные */
+  background: #9A3434FF;
   position: relative;
   cursor: pointer;
 }
+
 .chat-window .chat-header p {
   display: block;
   padding: 0 1em 0 2em;
@@ -72,6 +73,7 @@ body {
   font-weight: 700;
   line-height: 45px;
 }
+
 
 .chat-window .chat-body {
   height: calc(450px - (45px + 70px));
@@ -90,6 +92,29 @@ body {
 .chat-window .chat-body .message-container::-webkit-scrollbar {
   display: none;
 }
+
+.main-container{
+  display: flex;
+
+}
+.main-container .chat-container{
+  width: 75%;
+}
+
+
+.chat-window .user-list{
+  width: 25%;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border: 1px solid #263238;
+  text-align: center;
+}
+.chat-window .user-list ul{
+  padding: 0;
+  list-style-type:  none;
+}
+
+
 .chat-window .chat-body .message {
   height: auto;
   padding: 10px;
@@ -100,7 +125,7 @@ body {
   width: auto;
   height: auto;
   min-height: 40px;
-  max-width: 120px;
+  max-width: 500px;
   background-color: #43a047;
   border-radius: 5px;
   color: white;
@@ -113,6 +138,8 @@ body {
   overflow-wrap: break-word;
   word-break: break-word;
 }
+
+
 
 #you {
   justify-content: flex-start;

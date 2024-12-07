@@ -3,11 +3,19 @@ const app = express();
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io")
-
 app.use(cors());
-
 const crypto = require('crypto');
 const fs = require('fs');
+const privateKey = fs.readFileSync('../ssl/certificate/private.key', 'utf-8');
+const publicKey = fs.readFileSync('../ssl/certificate/public_key.pem', 'utf-8');
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"],
+    },
+});
+let roomUsers = {};
 
 
 function decryptMessage(encryptedMessage) {
@@ -15,32 +23,22 @@ function decryptMessage(encryptedMessage) {
     const decrypted = crypto.privateDecrypt(privateKey, buffer);
     return decrypted.toString('utf-8');
 }
-// function encryptMessage(message, publicKey){
-//     const buffer = Buffer.from(message, 'utf-8');
-//     const encrypted = crypto.publicEncrypt(publicKey, buffer)
-//     return encrypted.toString('base64');
-// }
-
-const privateKey = fs.readFileSync('../ssl/certificate/private.key', 'utf-8');
-const publicKey = fs.readFileSync('../ssl/certificate/public_key.pem', 'utf-8');
-
-const server = http.createServer(app);
-
-const io = new Server(server, {
-    cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"],
-    },
-});
 
 io.on("connection", (socket) => {
     console.log(`User Connected: ${socket.id}`);
 
     socket.on("join_room", (data) => {
-        socket.join(data);
+        const { room, username } = data;
 
-        console.log(`User with ID: ${socket.id} joined room: ${data}`);
+        socket.join(room);
 
+        if (!roomUsers[room]) {
+            roomUsers[room] = [];
+        }
+
+        roomUsers[room].push({ socketId: socket.id, username });
+        console.log(`User with ID: ${socket.id} joined room: ${room}`);
+        io.to(room).emit("update_user_list", roomUsers[room]);
     });
 
 
@@ -60,11 +58,16 @@ io.on("connection", (socket) => {
         socket.to(data.room).emit("receive_message", {
             message: decryptedMessage,
             author: data.author,
-            time: new Date().toLocaleTimeString(),
+            time: new Date(Date.now()).getHours() + ":" + new Date(Date.now()).getMinutes(),
         });
+
     });
 
     socket.on("disconnect", () => {
+        for (let room in roomUsers) {
+            roomUsers[room] = roomUsers[room].filter(user => user.socketId !== socket.id);
+            io.to(room).emit("update_user_list", roomUsers[room]);
+        }
         console.log("User Disconnected", socket.id);
     });
 
