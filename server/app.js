@@ -9,8 +9,10 @@ app.use(cors());
 const crypto = require('crypto');
 const fs = require('fs');
 
-const privateKey = fs.readFileSync('../ssl/certificate/private.key', 'utf-8');
-const publicKey = fs.readFileSync('../ssl/certificate/public_key.pem', 'utf-8');
+require('dotenv').config({path: '../.env'});
+
+const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf-8');
+const publicKey = fs.readFileSync(process.env.PUBLIC_KEY_PATH, 'utf-8');
 
 const server = http.createServer(app);
 const io = new Server(server, {
